@@ -7,3 +7,5 @@ venv
 test-mongo.py
 
 test-neo4j.py
+
+test-redis.py

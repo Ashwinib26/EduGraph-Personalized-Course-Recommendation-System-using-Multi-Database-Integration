@@ -30,19 +30,12 @@ try:
 except Exception as e:
     print(f"Neo4j connection failed: {e}")
 
-# --- Redis (Docker) ---
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 
-
 try:
-    redis_client = redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        decode_responses=True
-        # password=os.getenv("REDIS_PASSWORD") # Uncomment if needed
-    )
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
     redis_client.ping()
-    print("Redis Connected.")
+    print("Connected to Redis (Docker)")
 except Exception as e:
-    print(f"Redis connection failed: {e}")
+    print("Redis connection failed:", e)
