@@ -1,18 +1,26 @@
 import streamlit as st
-from app.recommendations import get_recommendations
+from core_functions import get_all_students, get_student_graph_data, recommend_courses
 
-st.set_page_config(page_title="EduGraph - Course Recommendation", layout="centered")
+st.set_page_config(page_title="EduGraph", page_icon="📊", layout="centered")
+st.title("🎓 EduGraph — Student Learning Graph")
 
-st.title("🎓 EduGraph: Smart Course Recommendation System")
+students = get_all_students()
+student_names = [s["name"] for s in students]
 
-student_id = st.number_input("Enter Student ID:", min_value=1, step=1)
+selected = st.selectbox("Select a Student:", student_names)
 
-if st.button("Get Recommendations"):
-    with st.spinner("Fetching recommendations..."):
-        recs = get_recommendations(int(student_id))
-        if recs:
-            st.success("Recommended Courses:")
-            for c in recs:
-                st.write(f"• {c}")
+if selected:
+    graph_data = get_student_graph_data(selected)
+    st.subheader(f"👤 {selected}'s Profile")
+    st.write(f"**Skills:** {', '.join(graph_data['skills']) if graph_data['skills'] else 'None'}")
+    st.write(f"**Enrolled Courses:** {', '.join(graph_data['courses']) if graph_data['courses'] else 'None'}")
+
+    st.divider()
+
+    if st.button("📘 Recommend Courses"):
+        recommended = recommend_courses(selected)
+        if recommended:
+            st.success(f"Recommended Courses for {selected}:")
+            st.write(", ".join(recommended))
         else:
-            st.warning("No recommendations found.")
+            st.info("No new recommendations — student already enrolled in all relevant courses.")
