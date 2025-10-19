@@ -1,36 +1,46 @@
-from db_config import mongo_db, neo4j_driver, redis_client
+import os
+from dotenv import load_dotenv
+from pymongo import MongoClient
+from neo4j import GraphDatabase
+import redis
 
-def get_all_students():
-    students = list(mongo_db["students"].find({}, {"_id": 0}))
-    return students
+load_dotenv()
 
-def get_student_graph_data(student_name):
-    query = """
-    MATCH (s:Student {name: $name})
-    OPTIONAL MATCH (s)-[:HAS_SKILL]->(sk:Skill)
-    OPTIONAL MATCH (s)-[:ENROLLED_IN]->(c:Course)
-    RETURN s.name AS student, collect(DISTINCT sk.name) AS skills, collect(DISTINCT c.title) AS courses
-    """
-    with neo4j_driver.session() as session:
-        result = session.run(query, name=student_name)
-        return result.single()
+# --- MongoDB ---
+MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
+MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "EduGraph")
 
+mongo_db = None
+try:
+    mongo_client = MongoClient(host=MONGO_HOST, port=MONGO_PORT)
+    mongo_client.admin.command('ping')
+    mongo_db = mongo_client[MONGO_DB_NAME]
+    print("✅ MongoDB Connected.")
+except Exception as e:
+    print(f"❌ MongoDB connection failed: {e}")
 
-def recommend_courses(student_name):
-    cached = redis_client.get(f"recommend:{student_name}")
-    if cached:
-        print("📦 Using cached recommendations from Redis")
-        return eval(cached)
+# --- Neo4j ---
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
-    print("🔍 Fetching new recommendations from Neo4j...")
-    query = """
-    MATCH (s:Student {name: $name})-[:HAS_SKILL]->(sk:Skill)<-[:REQUIRES_SKILL]-(c:Course)
-    WHERE NOT (s)-[:ENROLLED_IN]->(c)
-    RETURN DISTINCT c.title AS recommended_courses
-    """
-    with neo4j_driver.session() as session:
-        result = session.run(query, name=student_name)
-        courses = [r["recommended_courses"] for r in result]
+neo4j_driver = None
+try:
+    neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+    neo4j_driver.verify_connectivity()
+    print("✅ Neo4j Connected.")
+except Exception as e:
+    print(f"❌ Neo4j connection failed: {e}")
 
-    redis_client.setex(f"recommend:{student_name}", 300, str(courses))
-    return courses
+# --- Redis ---
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+
+redis_client = None
+try:
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+    redis_client.ping()
+    print("✅ Connected to Redis (Docker)")
+except Exception as e:
+    print(f"❌ Redis connection failed: {e}")

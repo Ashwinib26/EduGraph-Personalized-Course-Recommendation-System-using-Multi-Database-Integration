@@ -1,5 +1,5 @@
 import streamlit as st
-from core_functions import get_all_students, get_student_graph_data, recommend_courses
+from index import get_all_students, get_student_graph_data, recommend_courses
 
 st.set_page_config(page_title="EduGraph", page_icon="📊", layout="centered")
 st.title("🎓 EduGraph — Student Learning Graph")
