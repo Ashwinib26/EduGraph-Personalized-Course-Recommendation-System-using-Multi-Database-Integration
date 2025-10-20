@@ -1,46 +1,45 @@
-import os
-from dotenv import load_dotenv
-from pymongo import MongoClient
-from neo4j import GraphDatabase
-import redis
+# app/functions.py
+# --- TEMPORARY HARDCODED SAMPLE DATA for testing Streamlit frontend ---
 
-load_dotenv()
+def get_all_students():
+    """Return a list of mock students"""
+    return [
+        {"name": "Ashwini", "email": "ashwini@example.com"},
+        {"name": "Alice", "email": "alice@example.com"},
+        {"name": "Bob", "email": "bob@example.com"},
+        {"name": "Charlie", "email": "charlie@example.com"},
+    ]
 
-# --- MongoDB ---
-MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
-MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "EduGraph")
 
-mongo_db = None
-try:
-    mongo_client = MongoClient(host=MONGO_HOST, port=MONGO_PORT)
-    mongo_client.admin.command('ping')
-    mongo_db = mongo_client[MONGO_DB_NAME]
-    print("✅ MongoDB Connected.")
-except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
+def get_student_graph_data(student_name):
+    """Return mock skills and enrolled courses"""
+    data = {
+        "Ashwini": {
+            "skills": ["Python", "Data Analysis"],
+            "courses": ["Intro to Python", "Data Visualization 101"]
+        },
+        "Alice": {
+            "skills": ["C++", "Data Engineering"],
+            "courses": ["Intro to C++", "Data Modelling"]
+        },
+        "Bob": {
+            "skills": ["HTML", "CSS"],
+            "courses": ["Web Design Basics"]
+        },
+        "Charlie": {
+            "skills": ["Java", "SQL"],
+            "courses": ["Database Fundamentals"]
+        }
+    }
+    return data.get(student_name, {"skills": [], "courses": []})
 
-# --- Neo4j ---
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USER = os.getenv("NEO4J_USER")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
-neo4j_driver = None
-try:
-    neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-    neo4j_driver.verify_connectivity()
-    print("✅ Neo4j Connected.")
-except Exception as e:
-    print(f"❌ Neo4j connection failed: {e}")
-
-# --- Redis ---
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-
-redis_client = None
-try:
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
-    redis_client.ping()
-    print("✅ Connected to Redis (Docker)")
-except Exception as e:
-    print(f"❌ Redis connection failed: {e}")
+def recommend_courses(student_name):
+    """Return sample recommendations, as if from Neo4j + Redis"""
+    sample_recommendations = {
+        "Ashwini": ["Advanced Python", "Data Science Essentials"],
+        "Alice": ["Advanced C++", "Machine Learning Essentials"],
+        "Bob": ["JavaScript for Beginners", "Responsive Web Design"],
+        "Charlie": ["Advanced SQL", "Spring Boot Basics"]
+    }
+    return sample_recommendations.get(student_name, [])
